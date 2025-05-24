@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}
+  Registration
+{% endblock %}
+{% block header %}
+<h4 class="my-4 mx-auto text-success"><i class="fa fa-address-book pb-2" aria-hidden="true"></i> Registration</h4>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  <label for="username">Username <sup class="fs-12 text-danger">*</sup></label>
+  <input name="username" id="username" class="form-control" placeholder="full name" required>
+  <label for="password">Password <sup class="fs-12 text-danger">*</sup></label>
+  <input type="password" name="password" id="password" class="form-control" placeholder="password" required>
+  <input type="submit" value="Register" class="btn btn-primary mx-auto">
+</form>
+{% endblock %}

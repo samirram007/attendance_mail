@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block header %}
+<h4 class="my-4 mx-auto"><i class="fa fa-home" aria-hidden="true"></i> Home</h4>
+{% if g.user %}
+<a class="action" href="{{ url_for('blog.create') }}">New</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}

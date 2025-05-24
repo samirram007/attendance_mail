@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+
+
+{% block header %}
+<h3>{% block title %}Employee Imports{% endblock %}</h3>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+
+  <label for="title">Employee Records</label>
+  <input name="file" id="file" type="file" required>
+
+  <input type="submit" class="btn btn-primary mt-4 mx-auto" value="Import Employee Records">
+</form>
+{% endblock %}

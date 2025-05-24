@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Employee{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="employee_code">Employee Code</label>
+    <input name="employee_code" id="employee_code" value="{{ request.form['employee_code'] }}" required>
+    
+    <label for="card_no">Card No</label>
+    <input name="card_no" id="card_no" value="{{ request.form['card_no'] }}" required>
+    
+    <label for="name">Employee Name</label>
+    <input name="name" id="name" value="{{ request.form['name'] }}" required>
+    
+    <label for="email">Email Id</label>
+    <input name="email" id="email" value="{{ request.form['email'] }}" required>
+    
+    <label for="pdf_password">Pdf Password</label>
+    <input name="pdf_password" id="pdf_password" value="{{ request.form['pdf_password'] }}" required>
+    
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}

@@ -1,0 +1,200 @@
+@import "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap";
+
+.main-body {
+
+  background: url(../static/images/bg-attandance.webp) no-repeat!important;
+  background-size: cover !important;
+  height: 100%;
+    
+}
+
+
+body {
+   
+    font-family: "Poppins", sans-serif;
+    line-height: 1.8;
+}
+.custom-background {
+    background-color: /*#e9e7f7*/ rgba(92, 103, 247,0.92);
+    
+    
+}
+h1 {
+    color: #377ba8;
+    margin: 1rem 0;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid lightgray;
+}
+
+nav {
+    background: lightgray;
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+}
+
+nav h1 {
+    flex: auto;
+    margin: 0;
+}
+
+nav h1 a {
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a,
+nav ul li span,
+header .action {
+    display: block;
+    padding: 0.5rem;
+}
+
+.content {
+    padding: 0 1rem 1rem;
+}
+
+.content>header {
+    /*border-bottom: 1px solid lightgray;*/
+    display: flex;
+    align-items: flex-end;
+}
+
+.content>header h1 {
+    flex: auto;
+    margin: 1rem 0 0.25rem 0;
+}
+
+.flash {
+    margin: 1em 0;
+    padding: 1em;
+    background: #cae6f6;
+    border: 1px solid #377ba8;
+}
+
+.post>header {
+    display: flex;
+    align-items: flex-end;
+    font-size: 0.85em;
+}
+
+.post>header>div:first-of-type {
+    flex: auto;
+}
+
+.post>header h1 {
+    font-size: 1.5em;
+    margin-bottom: 0;
+}
+
+.post .about {
+    color: slategray;
+    font-style: italic;
+}
+
+.post .body {
+    white-space: pre-line;
+}
+
+.content:last-child {
+    margin-bottom: 0;
+}
+
+.content form {
+    margin: 1em 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.content label {
+    /* font-weight: bold; */
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+}
+
+.content input,
+.content textarea {
+    margin-bottom: 1em;
+}
+
+.content textarea {
+    min-height: 12em;
+    resize: vertical;
+}
+
+input.danger {
+    color: #cc2f2e;
+}
+
+input[type=submit] {
+    align-self: start;
+    min-width: 10em;
+}
+
+a { text-decoration: none;}
+a:focus, a:hover, a.active { color: #1daf4e;}
+
+/******** added later**************/
+.custom-logo { width: 75px; margin: 0 auto; position: relative; }
+
+.authentication {
+  min-height: 100vh;
+}
+.h-100 {
+    height: 100% !important;
+}
+.custom-card {
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-shadow: 0px 6px 16px 2px rgba(0, 0, 0, 0.2);
+    border: 0;
+    position: relative;
+    margin-block-end: 1.5rem;
+    width: 100%;
+}
+
+.text-muted{color:#6e829f}
+.op-7 {
+    opacity: 0.7;
+}
+.fw-normal {
+    font-weight: 400 !important;
+}
+.custom-nav li {display: flex;align-items: center;margin: 0 5px;font-size: 0.9rem;}
+.custom-border { border-color: #eee;
+}
+.form-control {
+    border-color: #dee7f1;
+    color: #212b37;;
+    background-color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.7;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+}
+.form-control:focus {
+    border-color: rgba(92, 103, 247, 0.5);
+    background-color: #fff;
+    color: #212b37;
+}
+.authentication .form-control {
+    padding-inline-end: 2.5rem;
+}
+.authentication  h5 {color: #377ba8; ;}
+.custom-table thead { background: #212064; color: #fff; }
+.custom-table thead th {font-weight: 400;}
+.custom-table tr:hover { cursor: pointer;}
+
+

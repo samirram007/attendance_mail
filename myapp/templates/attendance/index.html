@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h4>{% block title %}Attendance Imports{% endblock %}</h4>
+{% endblock %}
+
+{% block content %}
+<style>
+    .btn {
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+        background-color: /*#d62839;*/rgba(92, 103, 247, 0.7);
+        color: #fff;
+    }
+
+    .btn:active {
+        transform: scale(0.97);
+        background-color: #c41f32;
+    }
+
+    .btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .spinner {
+        display: none;
+        margin-left: 10px;
+        color: green;
+        font-style: italic;
+    }
+
+    #progressContainer {
+        width: 100%;
+        background: #eee;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    #progressBar {
+        transition: width 0.3s ease;
+    }
+</style>
+
+<form id="myForm" method="post" enctype="multipart/form-data">
+    <label for="title">Attendance Records</label>
+     <input name="file" id="file" type="file" accept=".pdf" required> 
+    <input class="btn btn-primary mt-4 mx-auto" id="submitBtn" type="submit" value="Send Attendance Report to Employees" >
+    <div id="progressContainer" style="display: none; margin-top: 10px;">
+        <div id="progressBar" style="height: 20px; width: 0%; background: #4caf50;"></div>
+        <div id="progressText" style="margin-top: 5px; font-size: 14px;">0%</div>
+    </div>
+    <!-- {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+    {% endfor %} -->
+    <span id="spinner" class="spinner">Please wait...</span>
+</form>
+<div id="progressUpdates" style="margin-top: 20px;"></div>
+<script>
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('spinner');
+
+    form.addEventListener('submit', function (e) {
+        //e.preventDefault(); // prevent default only if using AJAX
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline';
+        spinner.textContent = "Uploading attendance...";
+
+        // Simulated stages (you would replace this with real steps)
+        setTimeout(() => {
+            spinner.textContent = "Processing data...";
+        }, 1500);
+
+        setTimeout(() => {
+            spinner.textContent = "Sending emails to employees...";
+        }, 5000);
+
+        setTimeout(() => {
+            //submitBtn.disabled = false;
+            spinner.textContent = "Done!";
+            spinner.textContent = "Please wait !! mail is being sent...";
+        }, 5000);
+
+        // If using normal form submission (not AJAX), remove `e.preventDefault()` above
+        // and just set initial message like:
+        // spinner.textContent = "Submitting attendance and notifying employees...";
+    });
+</script>
+<!-- <script>
+    function pollProgress() {
+        fetch('/attendance/email-progress')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('progressUpdates');
+                container.innerHTML = '';
+
+                data.done.forEach(email => {
+                    container.innerHTML += `<div style="color: green;">✅ Email sent to ${email}</div>`;
+                });
+
+                data.failed.forEach(email => {
+                    container.innerHTML += `<div style="color: red;">❌ Failed to send to ${email}</div>`;
+                });
+
+                data.pending.forEach(email => {
+                    container.innerHTML += `<div style="color: orange;">⏳ Sending to ${email}...</div>`;
+                });
+
+                // Continue polling until all done
+                if (data.pending.length > 0) {
+                    setTimeout(pollProgress, 2000);
+                }
+            });
+    }
+
+    // Start polling after upload success
+    document.getElementById('myForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/attendance', {
+            method: 'POST',
+            body: formData
+        }).then(res => {
+            if (res.ok) {
+                pollProgress(); // Start polling progress
+            }
+        });
+    });
+</script> -->
+<!-- <script>
+    document.getElementById('myForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+        if (!file) {
+            console.log("File Not Found")
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                document.getElementById('progressContainer').style.display = 'block';
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressText').textContent = percent + '%';
+            }
+        });
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                document.getElementById('progressText').textContent = 'Upload complete! Emails sent.';
+            }
+        };
+
+        xhr.open('POST', '/attendance', true);
+        xhr.send(formData);
+    });
+</script> -->
+<!-- <script>
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('spinner');
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault(); // prevent default only if using AJAX
+        submitBtn.disabled = true;
+        spinner.style.display = 'inline';
+        spinner.textContent = "Uploading attendance...";
+
+        // Simulated stages (you would replace this with real steps)
+        setTimeout(() => {
+            spinner.textContent = "Processing data...";
+        }, 1500);
+
+        setTimeout(() => {
+            spinner.textContent = "Sending emails to employees...";
+        }, 3000);
+
+        setTimeout(() => {
+            spinner.textContent = "Done!";
+            submitBtn.disabled = false;
+        }, 5000);
+
+        // If using normal form submission (not AJAX), remove `e.preventDefault()` above
+        // and just set initial message like:
+        // spinner.textContent = "Submitting attendance and notifying employees...";
+    });
+</script> -->
+{% endblock %}
