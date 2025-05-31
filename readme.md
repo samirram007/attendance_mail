@@ -33,6 +33,7 @@ pip install -e .
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl start attendance
+sudo systemctl restart attendance
 sudo systemctl enable attendance
 
 

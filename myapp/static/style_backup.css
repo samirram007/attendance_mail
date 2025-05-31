@@ -145,7 +145,6 @@ input[type=submit] {
 a { text-decoration: none;}
 a:focus, a:hover, a.active { color: #1daf4e;}
 nav ul li.active {color: #1daf4e;}
-
 /******** added later**************/
 .custom-logo { width: 75px; margin: 0 auto; position: relative; }
 
@@ -172,6 +171,7 @@ nav ul li.active {color: #1daf4e;}
 .fw-normal {
     font-weight: 400 !important;
 }
+
 .custom-nav li {display: flex;align-items: center;margin: 0 5px;font-size: 0.9rem;}
 .custom-border { border-color: #eee;
 }
@@ -195,20 +195,58 @@ nav ul li.active {color: #1daf4e;}
 }
 .authentication  h5 {color: #377ba8; ;}
 .custom-table thead { background: #212064; color: #fff; }
-.custom-table thead th {font-weight: 400; white-space: nowrap;}
+.custom-table thead th {font-weight: 400;}
 .custom-table tr:hover { cursor: pointer;}
-.navbar { padding-left: 1rem; padding-right: 1rem;}
-ul.custom-nav { margin-left: auto;}
-.content h4,.content h3 { font-size:1.3rem}
 
-@media only screen and (max-width: 991.99px) {
- ul.custom-nav { flex-direction: row;  margin-right: auto; margin-left: 0%;}
- .custom-nav li { margin: 0;}
- .authentication h5 { font-size: 1rem; margin-right: 10px;}
- header h4 { font-size: calc(1.275rem + .0vw)}
- .custom-table table { white-space: nowrap; font-size: 13px}
-nav ul li a { white-space: nowrap ;font-size: 13px;}
 
+
+
+/* .flash {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  font-weight: 600;
+  max-width: 600px;
+} */
+  .flash {
+    padding: 12px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: opacity 5s ease-out;
+    max-width: 600px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* .flash.success { background-color: #d4edda; color: #155724; }
+  .flash.info    { background-color: #d1ecf1; color: #0c5460; }
+  .flash.warning { background-color: #fff3cd; color: #856404; }
+  .flash.error   { background-color: #f8d7da; color: #721c24; } */
+/* Success - green */
+.flash.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
+/* Warning - yellow/orange */
+.flash.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
 
+/* Info - blue */
+.flash.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* Error - red */
+.flash.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+ 

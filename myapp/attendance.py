@@ -1,8 +1,10 @@
+import threading
+from threading import Lock
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for,current_app,jsonify
+    Blueprint, flash, g, redirect, render_template,render_template_string, request, url_for,current_app,jsonify
 )
  
- 
+# from myapp.app import app
 import pdfplumber 
 import pandas as pd
 import re
@@ -33,31 +35,47 @@ bp = Blueprint('attendance', __name__)
 #     employees = db.execute('SELECT * FROM employee').fetchall()
 #     return render_template('attendance/index.html', employees=employees)
 
-email_progress = {
-    'done': [],
-    'failed': [],
-    'pending': []
-}
+
  
 from sqlalchemy import create_engine
+
+process_status = {
+    'status': 'idle',
+    'message': ''
+  
+}
  
 FILE_PATH = os.getenv('FILE_PATH',"myapp/static/")
 
 ALLOWED_EXTENSIONS = {'pdf'}
+
+
+pdf_generation_lock = Lock()
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@bp.route('/email-progress')
-def get_progress():
-    return jsonify(email_progress)
+@bp.route('/get-progress-status')
+def get_progress_status():
+    return jsonify(process_status)
 
 @bp.route('/', methods=('GET', 'POST'))
 @login_required
 def index():
-    db = get_db()
+    # db = get_db()
     if request.method == 'POST':
+        if pdf_generation_lock.locked():
+            flash("PDF generation is already in progress. Please wait.", "error")
+            process_status['status'] = 'busy'
+            process_status['message'] = 'PDF generation is already in progress. Please wait.'
+            # return jsonify({'error': 'PDF generation is already in progress. Please wait.'}), 400
+            return redirect(url_for('attendance.index'))
+         
+        
         file = request.files.get('file')
+    
         if not file or file.filename == '':
             flash('No file selected', 'error')
             # return jsonify({'error': 'No file uploaded'}), 400 
@@ -70,8 +88,12 @@ def index():
          
         try:
             file.save(FILE_PATH + "attn.pdf")
+            process_status['status'] = 'busy'
+            process_status['message'] = 'file uploaded successfully, processing...'
             # extract_attendance_data_from_pdf(FILE_PATH + "attn.pdf")  # Updated to call the function with the saved file path             
             process_attendance_data()  # Call the function to process the attendance data
+            
+            # flash("PDF generation started. Check your inbox or download section later.", "info")
             # flash('Attendance report sent successfully!', 'success')
         except Exception as e:
             flash(f'Error processing file: {e}', 'error')
@@ -86,7 +108,10 @@ def index():
 
 
 def process_attendance_data():
-    
+   
+    process_status['status'] = 'busy'
+    process_status['message'] = 'Processing attendance data...'
+
     pdf_path = FILE_PATH+"attn.pdf" 
     # Step 1: Read all text from the PDF
     with pdfplumber.open(pdf_path) as pdf:
@@ -199,7 +224,22 @@ def process_attendance_data():
     merged_df = merged_df[merged_df['email'].notna()]
     save_to_json(merged_df)
     # flash('pdf preparing!', 'success')
-    makepdf(merged_df)
+
+    # flash("Preparing PDF reports. This may take a few minutes.", "info")
+    process_status['message'] = 'Preparing PDF reports. This may take a few minutes.'
+    process_status['status'] = 'busy'
+    if not pdf_generation_lock.locked():
+        thread = threading.Thread(target=makepdf,args=(current_app._get_current_object(), merged_df,))
+        thread.start()
+        flash("Your PDF is being generated. An email notification will arrive shortly", "info")
+        # flash("PDF generation started.", "info")
+    else:
+        # If the lock is already held, notify the user
+        print("PDF generation is already in progress.")
+        # flash("PDF generation is already in progress. Please wait.", "warning")
+    # flash('pdf prepared', 'success')
+    # flash("PDF generation started. Check your inbox or download section later.", "success")
+    # makepdf(merged_df)
 
 
 
@@ -213,7 +253,10 @@ def save_to_json(merged_df):
     with open(FILE_PATH+"attendance_grid.json", "w") as json_file:
         json.dump(employee_data, json_file, indent=4) 
 
-def makepdf(merged_df):
+
+def makepdf(app,merged_df):
+    process_status['message'] = 'Generating PDF reports...'
+    process_status['status'] = 'busy'
     employee_data = merged_df.to_dict(orient='records')
     html_template = """
     <!DOCTYPE html>
@@ -280,79 +323,98 @@ def makepdf(merged_df):
     </body>
     </html>
     """
-
+    
     import pdfkit
+
+    config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
     # Setup wkhtmltopdf path
     # config = pdfkit.configuration(wkhtmltopdf=r'/usr/bin/wkhtmltopdf')
-    config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
+    with pdf_generation_lock:
+        with app.app_context():
+            # Create PDFs for each employee
+            for employee in employee_data:
+                # template = Template(html_template)
+                # rendered_html = template.render(
+                #     name=employee["name"],
+                #     employee_code=employee["employee_code"],
+                #     email=employee.get("email"),
+                #     pdf_password=employee.get("pdf_password", "123456"),
+                #     date_range=employee.get("date_range", ""),
+                #     entries=employee["entries"]
+                # )
+                rendered_html = render_template_string(
+                    html_template,
+                    name=employee["name"],
+                    employee_code=employee["employee_code"],
+                    email=employee.get("email", ""),
+                    date_range=employee.get("date_range", ""),
+                    entries=employee["entries"]
+                )
 
-    # Create PDFs for each employee
-    for employee in employee_data:
-        template = Template(html_template)
-        rendered_html = template.render(
-            name=employee["name"],
-            employee_code=employee["employee_code"],
-            email=employee.get("email"),
-            pdf_password=employee.get("pdf_password", "123456"),
-            date_range=employee.get("date_range", ""),
-            entries=employee["entries"]
-        )
+                # File paths
+                temp_pdf_path = os.path.join(FILE_PATH, "temp", f"{employee['employee_code']}_{employee['name'].replace(' ', '_')}.pdf")
+                protected_pdf_path = os.path.join(FILE_PATH, "pdf", f"{employee['employee_code']}_{employee['name'].replace(' ', '_')}_protected.pdf")
 
-        # File paths
-        temp_pdf_path = os.path.join(FILE_PATH, "temp", f"{employee['employee_code']}_{employee['name'].replace(' ', '_')}.pdf")
-        protected_pdf_path = os.path.join(FILE_PATH, "pdf", f"{employee['employee_code']}_{employee['name'].replace(' ', '_')}_protected.pdf")
+                # Ensure directories exist
+                os.makedirs(os.path.dirname(temp_pdf_path), exist_ok=True)
+                os.makedirs(os.path.dirname(protected_pdf_path), exist_ok=True)
 
-        # Ensure directories exist
-        os.makedirs(os.path.dirname(temp_pdf_path), exist_ok=True)
-        os.makedirs(os.path.dirname(protected_pdf_path), exist_ok=True)
+                # Generate PDF from HTML
+                pdfkit.from_string(rendered_html, temp_pdf_path, configuration=config)
 
-        # Generate PDF from HTML
-        pdfkit.from_string(rendered_html, temp_pdf_path, configuration=config)
+                # print(rendered_html)
+                reader = PdfReader(temp_pdf_path)
+                writer = PdfWriter()
+                for page in reader.pages:
+                    writer.add_page(page)
 
-        # print(rendered_html)
-        reader = PdfReader(temp_pdf_path)
-        writer = PdfWriter()
-        for page in reader.pages:
-            writer.add_page(page)
+                password = employee.get("pdf_password") or employee.get("employee_code") # fallback to employee_code
+                writer.encrypt(password)
 
-        password = employee.get("pdf_password") or employee.get("employee_code") # fallback to employee_code
-        writer.encrypt(password)
+                with open(protected_pdf_path, "wb") as f:
+                    writer.write(f)
 
-        with open(protected_pdf_path, "wb") as f:
-            writer.write(f)
+                # Optional: Remove the temporary unprotected file
+                # os.remove(temp_pdf_path) 
 
-        # Optional: Remove the temporary unprotected file
-        os.remove(temp_pdf_path) 
+                body= render_template('mail/attendance_email_body.html', image_cid='logo_cid', name=employee["name"], employee_code=employee["employee_code"], date_range=employee.get("date_range", ""), entries=employee["entries"])
 
-        body= render_template('mail/attendance_email_body.html', image_cid='logo_cid', name=employee["name"], employee_code=employee["employee_code"], date_range=employee.get("date_range", ""), entries=employee["entries"])
-
-        if os.path.exists(protected_pdf_path):
-
-            send_email_with_attachment(
-                subject="Attendance Report for " + employee["name"]+" (" + employee["employee_code"] + ") Period:  " + employee["date_range"],
-                body=body,
-                recipient=employee.get("email"),
-                attachment_path=protected_pdf_path
-            )
-        else:
-            print(f"Failed to create PDF for {employee['name']}")
-         
-        
-        # print(f"PDF generated and sent to {employee.get('email')}: {protected_pdf_path}")
-        # add delay
-        
-    flash(f'Mail sent to: {len(employee_data)} employees', 'success')
-    #print("PDFs generated with attendance tables.")
+                if os.path.exists(protected_pdf_path):
+                    process_status['message'] = 'PDF generated successfully. Sending email to ' + employee["name"]
+                    process_status['status'] = 'sending_email'
+                    send_email_with_attachment(
+                        app,
+                        subject="Attendance Report for " + employee["name"]+" (" + employee["employee_code"] + ") Period:  " + employee["date_range"],
+                        body=body,
+                        recipient=employee.get("email"),
+                        attachment_path=protected_pdf_path
+                    )
+                else:
+                    print(f"Failed to create PDF for {employee['name']}")
+                
+                
+                # print(f"PDF generated and sent to {employee.get('email')}: {protected_pdf_path}")
+                # add delay
+                
+            # flash(f'Mail sent to: {len(employee_data)} employees', 'success')
+            #print("PDFs generated with attendance tables.")
+    
+    process_status['message'] = 'PDF generation completed successfully.'
+    process_status['status'] = 'completed'
 
 
-def send_email_with_attachment(subject, body, recipient, attachment_path):
+
+
+
+def send_email_with_attachment(app,subject, body, recipient, attachment_path):
     msg = Message(subject, recipients=[recipient])
     msg.html = body
 
-    image_abs_path = os.path.join(current_app.root_path, 'static', 'images', 'image001.jpg')
-    image_rel_path = os.path.relpath(image_abs_path, start=current_app.root_path)
+    print("Root Path"+ app.root_path)
+    image_abs_path = os.path.join(app.root_path, 'static', 'images', 'image001.jpg')
+    image_rel_path = os.path.relpath(image_abs_path, start=app.root_path)
 
-    with current_app.open_resource(image_rel_path) as img:
+    with app.open_resource(image_rel_path) as img:
         msg.attach(
             filename="image001.jpg",
             content_type="image/jpeg",
@@ -364,13 +426,13 @@ def send_email_with_attachment(subject, body, recipient, attachment_path):
     if attachment_path:
         # Convert absolute path to relative path for open_resource
         try:
-            rel_path = os.path.relpath(attachment_path, start=current_app.root_path)
+            rel_path = os.path.relpath(attachment_path, start=app.root_path)
             # print(f"Relative path: {rel_path}")
             # print(f"Attachment path: {os.path.basename(rel_path)}")
-            with current_app.open_resource(rel_path) as fp:
+            with app.open_resource(rel_path) as fp:
                 msg.attach(os.path.basename(attachment_path), "application/pdf", fp.read())
 
-            current_app.extensions.get('mail').send(msg)
+            app.extensions.get('mail').send(msg)
         except Exception as e:
             print(f"Error sending email to {recipient}: {e}")
 

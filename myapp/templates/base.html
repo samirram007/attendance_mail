@@ -16,31 +16,45 @@
         <div class="card-body">
           <div class="card-title text-center custom-logo "><img src="../static/images/logo.png" alt="pdp-group" title="pdp-group" class="rounded img-fluid" /></div>
           <p class="my-4 text-muted op-7 fw-normal text-center">Welcome! To PDP Group India Attendance Portal</p>
-          <nav class="navbar navbar-expand-lg navbar-light bg-light custom-border border-bottom">
+
+          <nav class="navbar navbar-expand-lg navbar-light bg-light custom-border border-bottom mb-2">
             <h5 class="mb-0"> <i class="fa fa-envelope" aria-hidden="true"></i> Attendance Mail</h5>
-            <ul class="navbar-nav custom-nav ms-2">
+            <ul class="navbar-nav custom-nav ">
               {% if g.user %}
-              <li><i class="fa fa-users" aria-hidden="true"></i> <a href="{{ url_for('employee.index') }}">Employee</a>
-              <li><i class="fa fa-address-book" aria-hidden="true"></i> <a href="{{ url_for('attendance.index') }}">Attendance</a>
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav ms-auto custom-nav">
-              {% if g.user %}
-              <li><span>{{ g.user['username'] }}</span>
-              <li><i class="fa fa-sign-out" aria-hidden="true"></i><a href="{{ url_for('auth.logout') }}"> Log Out</a>
-                {% else %}
-              <li><i class="fa fa-address-book" aria-hidden="true"></i> <a href="{{ url_for('auth.register') }}">Register</a> </li>
-              <li><i class="fa fa-sign-in" aria-hidden="true"></i> <a href="{{ url_for('auth.login') }}">Log In</a>
-                {% endif %}
+                  <li><i class="fa fa-users" aria-hidden="true"></i> <a href="{{ url_for('employee.index') }}" class="{% if request.endpoint == 'employee.index' %}active{% endif %}">Employee</a>
+                  <li><i class="fa fa-address-book" aria-hidden="true"></i> <a href="{{ url_for('attendance.index') }}" class="  {% if request.endpoint == 'attendance.index' %}active{% endif %}" >Attendance</a>
+                  <!-- <li><span>{{ g.user['username'] }}</span> -->
+                  <li><i class="fa fa-sign-out" aria-hidden="true"></i><a href="{{ url_for('auth.logout') }}"> Log Out</a>
+              {% else %}
+                <!--li><i class="fa fa-address-book" aria-hidden="true"></i> <a href="{{ url_for('auth.register') }}">Register</a> </li-->
+                <li><i class="fa fa-sign-in" aria-hidden="true"></i> <a href="{{ url_for('auth.login') }}">Log In</a>
+              {% endif %}
             </ul>
           </nav>
+
           <div class="content">
             <header>
               {% block header %}{% endblock %}
             </header>
-            {% for message in get_flashed_messages() %}
-            <div class="flash">{{ message }}</div>
-            {% endfor %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+              <div id="flash-container">
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+              <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                  setTimeout(function () {
+                    var flashContainer = document.getElementById("flash-container");
+                    if (flashContainer) {
+                      flashContainer.style.display = "none";
+                    }
+                  }, 5000); // 5 seconds
+                });
+                </script>
+              {% endif %}
+            {% endwith %}
             {% block content %}{% endblock %}
           </div>
         </div>

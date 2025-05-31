@@ -6,7 +6,8 @@ from werkzeug.exceptions import abort
 from myapp.auth import login_required
 from myapp.db import get_db
 import sqlite3
-
+import pandas as pd
+from sqlalchemy import create_engine
 bp = Blueprint('employee', __name__)
 
 
@@ -107,8 +108,7 @@ def delete(id):
     db.commit()
     return redirect(url_for('employee.index'))
 
-import pandas as pd
-from sqlalchemy import create_engine
+
  
 
 
@@ -133,20 +133,56 @@ def import_data():
         try:
             ext = file.filename.rsplit('.', 1)[1].lower()
             # df = pd.read_excel(file, engine='xlrd' if ext == 'xls' else 'openpyxl')
-            print(f"File extension: {ext}")
-            if ext == 'xls':
-                df = pd.read_excel(file, engine='xlrd')
-            elif ext == 'xlsx':
-                df = pd.read_excel(file, engine='openpyxl')
+            
+            if ext == 'xls' or ext == 'xlsx':
+                df = pd.read_excel(file)
+                # Use pandas to read the Excel file
+                # df = pd.read_excel(file, engine='openpyxl' if ext == 'xlsx' else 'xlrd')
             else:
-                flash('Unsupported file extension.', 'error')
+                flash('Unsupported file extension. Please upload .xls or .xlsx file.', 'error')
                 return redirect(request.url)
-            # Optional: Rename or normalize columns if needed
-            df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
-
-            required_columns = {'sl_no','employee_code', 'card_no', 'name', 'email', 'pdf_password'}
-            if not required_columns.issubset(df.columns):
-                flash('Missing required columns in Excel file.', 'error')
+            
+            # try:
+            #     if ext == 'xls':
+            #         try:
+            #             print(f"in File extension: {ext}")
+            #             df = pd.read_excel(file, engine='xlrd')
+            #         except Exception as e:
+            #             print(f"error File extension: {ext}")
+            #             flash('xlrd library is required to read .xls files.', 'error')
+            #             return redirect(request.url)
+            #     elif ext == 'xlsx':
+            #         df = pd.read_excel(file, engine='openpyxl')
+            #         # print("Using openpyxl engine for .xlsx file",df.head())
+            #     else:
+            #         flash('Unsupported file extension.', 'error')
+            #         return redirect(request.url)
+            # except ImportError:
+            #         flash('openpyxl library is required to read .xlsx files.', 'error')
+            #         return redirect(request.url)
+            
+            try:
+                # Check if the DataFrame is empty
+                if df.empty:
+                    flash('The uploaded file is empty.', 'error')
+                    return redirect(request.url)
+                # Optional: Rename or normalize columns if needed
+                df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
+                df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+                df.rename(columns={
+                    'sl_no.': 'sl_no',
+                    'mail_id': 'email'
+                }, inplace=True)
+                required_columns = {'sl_no','employee_code', 'card_no', 'name', 'email', 'pdf_password'}
+                if not required_columns.issubset(df.columns):
+                    print(df.columns)
+                    missing = required_columns - set(df.columns)
+                    flash(f"Missing required columns: {', '.join(missing)}", "error")
+                    print(f"Missing columns in DataFrame: {set(required_columns) - set(df.columns)}")
+                    flash("Uploaded Excel file is missing required columns.", "danger")
+                    return redirect(request.url)
+            except KeyError as e:
+                flash(f"Missing required column: {e}", "danger")
                 return redirect(request.url)
 
           

@@ -53,24 +53,26 @@
     }
 </style>
 
-<form id="myForm" method="post" enctype="multipart/form-data">
-    <label for="title">Attendance Records</label>
-     <input name="file" id="file" type="file" accept=".pdf" required> 
-    <input class="btn btn-primary mt-4 mx-auto" id="submitBtn" type="submit" value="Send Attendance Report to Employees" >
-    <div id="progressContainer" style="display: none; margin-top: 10px;">
-        <div id="progressBar" style="height: 20px; width: 0%; background: #4caf50;"></div>
-        <div id="progressText" style="margin-top: 5px; font-size: 14px;">0%</div>
-    </div>
-    <!-- {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
-    {% endfor %} -->
-    <span id="spinner" class="spinner">Please wait...</span>
-</form>
-<div id="progressUpdates" style="margin-top: 20px;"></div>
+   
+        <form id="myForm" method="post" enctype="multipart/form-data">
+            <label for="title">Attendance Records</label>
+            <input name="file" id="file" type="file" accept=".pdf" required> 
+            <input class="btn btn-primary mt-4 mx-auto text-wrap" id="submitBtn" type="submit" value="Send Attendance Report to Employees" >
+            <div id="progressContainer" style="display: none; margin-top: 10px;">
+                <div id="progressBar" style="height: 20px; width: 0%; background: #4caf50;"></div>
+                <div id="progressText" style="margin-top: 5px; font-size: 14px;">0%</div>
+            </div>
+            <span id="spinner" class="spinner">Please wait...</span>
+            <span id="message" class="spinner">Please wait...</span>
+        </form>
+        <div id="progressUpdates" style="margin-top: 20px;"></div>
+    
+
 <script>
     const form = document.getElementById('myForm');
     const submitBtn = document.getElementById('submitBtn');
     const spinner = document.getElementById('spinner');
+    const message = document.getElementById('message');
 
     form.addEventListener('submit', function (e) {
         //e.preventDefault(); // prevent default only if using AJAX
@@ -79,6 +81,7 @@
         spinner.textContent = "Uploading attendance...";
 
         // Simulated stages (you would replace this with real steps)
+       
         setTimeout(() => {
             spinner.textContent = "Processing data...";
         }, 1500);
@@ -92,11 +95,55 @@
             spinner.textContent = "Done!";
             spinner.textContent = "Please wait !! mail is being sent...";
         }, 5000);
-
+        
+         
         // If using normal form submission (not AJAX), remove `e.preventDefault()` above
         // and just set initial message like:
         // spinner.textContent = "Submitting attendance and notifying employees...";
     });
+</script>
+<script>
+    function pollProgress() {
+        console.log("Polling for progress status...");
+        fetch('/attendance/get-progress-status')
+            .then(res => res.json())
+            .then(data => {
+                console.log("fetched Data: ",data); 
+                /* 
+                
+                const container = document.getElementById('progressUpdates');
+                container.innerHTML = '';
+
+                data.done.forEach(email => {
+                    container.innerHTML += `<div style="color: green;">✅ Email sent to ${email}</div>`;
+                });
+
+                data.failed.forEach(email => {
+                    container.innerHTML += `<div style="color: red;">❌ Failed to send to ${email}</div>`;
+                });
+
+                data.pending.forEach(email => {
+                    container.innerHTML += `<div style="color: orange;">⏳ Sending to ${email}...</div>`;
+                });
+                */
+
+                // Continue polling until all done
+                if (data.status == 'idle' || data.status == 'in_progress' || data.status == 'busy') {
+                    message.textContent = "Please wait !! mail is being sent...";
+                    setTimeout(pollProgress, 2000); // Poll every 2 seconds
+                    // Stop polling if the process is completed or failed
+                    //clearInterval(pollInterval);
+                }
+                else if (data.status== 'completed') {
+                    message.textContent += `<div style="color: green;">✅ All emails sent successfully!</div>`;
+                } else if (data.status == 'failed') {
+                    message.textContent += `<div style="color: red;">❌ Some emails failed to send. Please check the logs.</div>`;
+                } else {
+                    message.textContent += `<div style="color: orange;">⏳ Sending emails... ${data.message}% completed</div>`;
+                    setTimeout(pollProgress, 2000);
+                }
+            });
+    }
 </script>
 <!-- <script>
     function pollProgress() {
