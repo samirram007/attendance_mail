@@ -1,0 +1,19 @@
+# .env
+FLASK_APP="wsgi.py"
+
+FLASK_ENV="development"
+FLASK_RUN_PORT=5001
+
+# Flask-Mail (GMAIL)
+MAIL_SERVER='smtp.gmail.com'
+MAIL_PORT=587
+MAIL_USERNAME='samirram007@gmail.com'
+MAIL_PASSWORD='naqd tdpa cwpx knep'
+MAIL_USE_TLS=True
+MAIL_USE_SSL=False
+MAIL_DEFAULT_SENDER='samirram007@gmail.com'
+
+# Security
+SECRET_KEY='your_super_secret_key_here'
+
+FILE_PATH = "myapp/static/"
